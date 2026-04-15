@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Geometry-Aware VAE — Research Dashboard</title>
+<link rel="stylesheet" href="/static/css/style.css"/>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">GeoVAE</span>
+    </div>
+    <ul class="nav-links">
+      <li class="nav-item active" data-tab="dashboard">
+        <span class="nav-icon">◈</span><span>Dashboard</span>
+      </li>
+      <li class="nav-item" data-tab="train">
+        <span class="nav-icon">⚡</span><span>Train</span>
+      </li>
+      <li class="nav-item" data-tab="latent">
+        <span class="nav-icon">✦</span><span>Latent Space</span>
+      </li>
+      <li class="nav-item" data-tab="generate">
+        <span class="nav-icon">◉</span><span>Generate</span>
+      </li>
+      <li class="nav-item" data-tab="compare">
+        <span class="nav-icon">⊞</span><span>Compare</span>
+      </li>
+      <li class="nav-item" data-tab="ai">
+        <span class="nav-icon">◆</span><span>AI Analysis</span>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="device-badge" id="deviceBadge">CPU</div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- HEADER -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        <span class="page-subtitle">Geometry-Aware Variational Autoencoder</span>
+      </div>
+      <div class="topbar-right">
+        <div class="model-selector">
+          <select id="globalModel" class="select-pill">
+            <option value="gaussian">Gaussian VAE</option>
+            <option value="spherical">Spherical VAE</option>
+          </select>
+          <select id="globalDataset" class="select-pill">
+            <option value="mnist">MNIST</option>
+            <option value="fashion_mnist">Fashion-MNIST</option>
+            <option value="cifar10">CIFAR-10</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB: DASHBOARD -->
+    <section class="tab-content active" id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card" id="statGaussianMnist">
+          <div class="stat-label">Gaussian MNIST</div>
+          <div class="stat-value" id="valGM">—</div>
+          <div class="stat-sub">Best Val Loss</div>
+          <div class="stat-badge trained" id="badgeGM">Checking...</div>
+        </div>
+        <div class="stat-card" id="statSphericalMnist">
+          <div class="stat-label">Spherical MNIST</div>
+          <div class="stat-value" id="valSM">—</div>
+          <div class="stat-sub">Best Val Loss</div>
+          <div class="stat-badge" id="badgeSM">Checking...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Gaussian Fashion</div>
+          <div class="stat-value" id="valGF">—</div>
+          <div class="stat-sub">Best Val Loss</div>
+          <div class="stat-badge" id="badgeGF">Checking...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Spherical Fashion</div>
+          <div class="stat-value" id="valSF">—</div>
+          <div class="stat-sub">Best Val Loss</div>
+          <div class="stat-badge" id="badgeSF">Checking...</div>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <div class="card wide">
+          <div class="card-header">
+            <h3>Reconstruction Preview</h3>
+            <button class="btn-primary" onclick="loadReconstructions()">Refresh</button>
+          </div>
+          <div id="reconDisplay" class="recon-grid"></div>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <div class="card">
+          <div class="card-header"><h3>Loss Curves</h3></div>
+          <img id="lossPlot" class="plot-img" src="" alt="Loss curve will appear after training"/>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>t-SNE Visualization</h3></div>
+          <img id="tsnePlot" class="plot-img" src="" alt="t-SNE will appear after training"/>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: TRAIN -->
+    <section class="tab-content" id="tab-train">
+      <div class="train-panel">
+        <div class="card">
+          <div class="card-header"><h3>⚡ Train a Model</h3></div>
+          <div class="form-group">
+            <label>Model Architecture</label>
+            <select id="trainModel" class="select-field">
+              <option value="gaussian">Gaussian VAE</option>
+              <option value="spherical">Spherical VAE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Dataset</label>
+            <select id="trainDataset" class="select-field">
+              <option value="mnist">MNIST (60k images, grayscale)</option>
+              <option value="fashion_mnist">Fashion-MNIST (60k images)</option>
+              <option value="cifar10">CIFAR-10 (50k images, color)</option>
+            </select>
+          </div>
+          <button class="btn-primary btn-large" onclick="startTraining()">Start Training</button>
+          <div id="trainStatus" class="status-box hidden"></div>
+          <div id="trainProgress" class="progress-box hidden">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <p id="progressText">Initializing...</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Training Queue</h3></div>
+          <button class="btn-secondary" onclick="trainAllModels()">Train All Models (All Datasets)</button>
+          <div id="queueStatus" class="queue-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: LATENT SPACE -->
+    <section class="tab-content" id="tab-latent">
+      <div class="card-row">
+        <div class="card wide">
+          <div class="card-header">
+            <h3>✦ Latent Space Visualization</h3>
+            <button class="btn-primary" onclick="loadLatentSpace()">Visualize</button>
+          </div>
+          <div id="latentPlot" style="width:100%;height:500px;"></div>
+          <div class="metric-row" id="silhouetteDisplay"></div>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <div class="card wide">
+          <div class="card-header">
+            <h3>Interpolation Walk</h3>
+            <div class="controls-row">
+              <label>Steps: <input type="range" min="5" max="20" value="10" id="interpSteps"
+                oninput="document.getElementById('stepsVal').textContent=this.value"/> 
+                <span id="stepsVal">10</span></label>
+              <button class="btn-primary" onclick="loadInterpolation()">Generate</button>
+            </div>
+          </div>
+          <div id="interpDisplay" class="interp-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: GENERATE -->
+    <section class="tab-content" id="tab-generate">
+      <div class="card wide">
+        <div class="card-header">
+          <h3>◉ Sample Generation</h3>
+          <div class="controls-row">
+            <label>Count: <input type="number" id="genCount" value="16" min="1" max="64" style="width:60px"/></label>
+            <button class="btn-primary" onclick="loadGenerated()">Generate Samples</button>
+          </div>
+        </div>
+        <div id="genDisplay" class="gen-grid"></div>
+      </div>
+    </section>
+
+    <!-- TAB: COMPARE -->
+    <section class="tab-content" id="tab-compare">
+      <div class="card wide">
+        <div class="card-header">
+          <h3>⊞ Model Comparison</h3>
+          <button class="btn-primary" onclick="loadComparison()">Compare</button>
+        </div>
+        <div id="compareTable" class="compare-table-wrap"></div>
+      </div>
+
+      <div class="card-row">
+        <div class="card">
+          <div class="card-header"><h3>Gaussian VAE Latent</h3></div>
+          <img id="gaussianLatentImg" class="plot-img" src="" alt="Train Gaussian VAE first"/>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Spherical VAE Latent</h3></div>
+          <img id="sphericalLatentImg" class="plot-img" src="" alt="Train Spherical VAE first"/>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: AI ANALYSIS -->
+    <section class="tab-content" id="tab-ai">
+      <div class="card-row">
+        <div class="card">
+          <div class="card-header">
+            <h3>◆ AI Research Analysis</h3>
+            <button class="btn-primary" onclick="runAIAnalysis()">Analyze Results</button>
+          </div>
+          <div id="aiAnalysis" class="ai-output">
+            Click "Analyze Results" to get AI-powered insights about your VAE experiments.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Chat with AI Researcher</h3></div>
+          <div id="chatMessages" class="chat-messages">
+            <div class="chat-msg assistant">
+              Hello! I'm your AI research assistant. Ask me anything about Variational Autoencoders,
+              geometric deep learning, or your experiment results.
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" class="chat-input"
+              placeholder="Ask about VAEs, geometry, results..."
+              onkeydown="if(event.key==='Enter') sendChat()"/>
+            <button class="btn-primary" onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
