@@ -1,0 +1,26 @@
+gaussian:
+  dataset: "mnist"
+  latent_dim: 10
+  batch_size: 128
+  epochs: 30
+  lr: 0.001
+  beta: 0.1
+  seed: 42
+
+spherical:
+  dataset: "mnist"
+  latent_dim: 10
+  batch_size: 128
+  epochs: 30
+  lr: 0.001
+  beta: 0.1
+  seed: 42
+
+datasets:
+  - mnist
+  - fashion_mnist
+  - cifar10
+
+server:
+  host: "0.0.0.0"
+  port: 5050
